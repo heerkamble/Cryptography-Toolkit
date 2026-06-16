@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cryptography Toolkit</title>
+  <style>
+    /* ── Palette ──────────────────────────────────────────── */
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #151820;
+      --card:      #1c2030;
+      --border:    #2a2f45;
+      --accent:    #00e5ff;
+      --accent2:   #7c3aed;
+      --green:     #00c896;
+      --red:       #ff4d6d;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --mono:      'Courier New', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ───────────────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    header .lock { font-size: 28px; }
+    header h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+    header p  { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Tabs ─────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 24px 32px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+    }
+    .tab-btn:hover  { color: var(--text); background: var(--card); }
+    .tab-btn.active { color: var(--accent); background: var(--card); border-bottom: 2px solid var(--accent); }
+
+    /* ── Main layout ──────────────────────────────────────── */
+    main { padding: 28px 32px; max-width: 960px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .info-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent2);
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    .info-box strong { color: var(--text); }
+
+    /* ── Cards ────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+    .card h3 {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    /* ── Form elements ────────────────────────────────────── */
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+      resize: vertical;
+    }
+    input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
+    .field { margin-bottom: 14px; }
+
+    .row { display: flex; gap: 12px; }
+    .row .field { flex: 1; }
+
+    /* ── Buttons ──────────────────────────────────────────── */
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+    }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-danger:hover { opacity: 0.85; }
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+    /* ── Output ───────────────────────────────────────────── */
+    .output {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--green);
+      word-break: break-all;
+      white-space: pre-wrap;
+      min-height: 44px;
+      margin-top: 4px;
+    }
+    .output.error { color: var(--red); }
+    .output.info  { color: var(--accent); }
+
+    .output-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 14px;
+      margin-bottom: 5px;
+    }
+
+    /* ── Match badge ──────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .badge.match    { background: rgba(0,200,150,0.15); color: var(--green); }
+    .badge.no-match { background: rgba(255,77,109,0.15); color: var(--red); }
+
+    /* ── Divider ──────────────────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+
+    /* ── Spinner ──────────────────────────────────────────── */
+    .spinner { display: none; font-size: 12px; color: var(--muted); margin-left: 10px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="lock">🔐</span>
+  <div>
+    <h1>Cryptography Toolkit</h1>
+    <p>AES · RSA · SHA-256 — An internship project demo</p>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('aes', this)">🔑 AES</button>
+  <button class="tab-btn" onclick="switchTab('rsa', this)">🗝️ RSA</button>
+  <button class="tab-btn" onclick="switchTab('sha', this)">🔏 SHA-256</button>
+</div>
+
+<main>
+
+  <!-- ══════════════════════════════════════════════════════
+       AES TAB
+  ══════════════════════════════════════════════════════ -->
+  <div id="tab-aes" class="tab-panel active">
+    <div class="info-box">
+      <strong>AES (Advanced Encryption Standard)</strong> is a <em>symmetric</em> cipher —
+      the same key encrypts and decrypts. It's the gold standard used in HTTPS, Wi-Fi (WPA2),
+      and file encryption. We use <strong>AES-256 in CBC mode</strong> with PKCS7 padding.
+    </div>
+
+    <!-- Step 1: Generate Key -->
+    <div class="card">
+      <h3>Step 1 — Generate Key</h3>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="aesGenerateKey()">Generate AES-256 Key</button>
+        <span class="spinner" id="aes-key-spin">Generating…</span>
+      </div>
+      <div class="output-label">Your Key (base64)</div>
+      <div class="output" id="aes-key-out">Key will appear here…</div>
+    </div>
+
+    <!-- Step 2: Encrypt -->
+    <div class="card">
+      <h3>Step 2 — Encrypt</h3>
+      <div class="field">
+        <label>Plaintext Message</label>
+        <input type="text" id="aes-plain" placeholder="Type a secret message…" />
+      </div>
+      <div class="field">
+        <label>Key (auto-filled, or paste your own)</label>
+        <input type="text" id="aes-enc-key" placeholder="Paste key here or generate above" />
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="aesEncrypt()">Encrypt</button>
+      </div>
+      <div class="output-label">IV (Initialization Vector)</div>
+      <div class="output" id="aes-iv-out">—</div>
+      <div class="output-label">Ciphertext</div>
+      <div class="output" id="aes-ct-out">—</div>
+    </div>
+
+    <!-- Step 3: Decrypt -->
+    <div class="card">
+      <h3>Step 3 — Decrypt</h3>
+      <div class="field">
+        <label>Key</label>
+        <input type="text" id="aes-dec-key" placeholder="Paste key (auto-filled after encrypt)" />
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>IV</label>
+          <input type="text" id="aes-dec-iv" placeholder="Paste IV from above" />
+        </div>
+        <div class="field">
+          <label>Ciphertext</label>
+          <input type="text" id="aes-dec-ct" placeholder="Paste ciphertext from above" />
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="aesDecrypt()">Decrypt</button>
+      </div>
+      <div class="output-label">Decrypted Message</div>
+      <div class="output" id="aes-dec-out">—</div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       RSA TAB
+  ══════════════════════════════════════════════════════ -->
+  <div id="tab-rsa" class="tab-panel">
+    <div class="info-box">
+      <strong>RSA (Rivest–Shamir–Adleman)</strong> is an <em>asymmetric</em> cipher — a
+      <strong>public key</strong> encrypts, a <strong>private key</strong> decrypts.
+      Anyone can encrypt a message to you; only you can read it. Used in TLS, SSH, and email (PGP).
+      We use <strong>RSA-2048 with OAEP padding</strong>.
+    </div>
+
+    <!-- Generate Keys -->
+    <div class="card">
+      <h3>Step 1 — Generate Key Pair</h3>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="rsaGenKeys()">Generate RSA Key Pair</button>
+        <span class="spinner" id="rsa-key-spin">Generating (takes a moment)…</span>
+      </div>
+      <div class="output-label">Public Key — share this freely</div>
+      <textarea class="output" id="rsa-pub-out" rows="6" style="color: var(--green)">—</textarea>
+      <div class="output-label">Private Key — keep this secret!</div>
+      <textarea class="output" id="rsa-priv-out" rows="6" style="color: var(--red)">—</textarea>
+    </div>
+
+    <!-- Encrypt -->
+    <div class="card">
+      <h3>Step 2 — Encrypt</h3>
+      <div class="field">
+        <label>Message (max ~200 chars for RSA)</label>
+        <input type="text" id="rsa-plain" placeholder="Type a secret message…" />
+      </div>
+      <div class="field">
+        <label>Public Key (auto-filled)</label>
+        <textarea id="rsa-enc-pub" rows="3" placeholder="Paste public key or generate above"></textarea>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="rsaEncrypt()">Encrypt</button>
+      </div>
+      <div class="output-label">Ciphertext (base64)</div>
+      <div class="output" id="rsa-ct-out">—</div>
+    </div>
+
+    <!-- Decrypt -->
+    <div class="card">
+      <h3>Step 3 — Decrypt</h3>
+      <div class="field">
+        <label>Ciphertext (auto-filled)</label>
+        <textarea id="rsa-dec-ct" rows="3" placeholder="Paste ciphertext from above"></textarea>
+      </div>
+      <div class="field">
+        <label>Private Key (auto-filled)</label>
+        <textarea id="rsa-dec-priv" rows="3" placeholder="Paste private key or generate above"></textarea>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="rsaDecrypt()">Decrypt</button>
+      </div>
+      <div class="output-label">Decrypted Message</div>
+      <div class="output" id="rsa-dec-out">—</div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       SHA-256 TAB
+  ══════════════════════════════════════════════════════ -->
+  <div id="tab-sha" class="tab-panel">
+    <div class="info-box">
+      <strong>SHA-256 (Secure Hash Algorithm)</strong> is a <em>one-way</em> hash function.
+      It converts any input into a fixed 256-bit fingerprint. It <strong>cannot be reversed</strong>.
+      Used to store passwords, verify file integrity, and power blockchains.
+      <strong>Salting</strong> adds a random value before hashing so identical inputs produce different hashes.
+    </div>
+
+    <!-- Hash -->
+    <div class="card">
+      <h3>Hash a Message</h3>
+      <div class="field">
+        <label>Input Text</label>
+        <input type="text" id="sha-input" placeholder="Type anything…" />
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary"   onclick="shaHash(false)">Hash (simple)</button>
+        <button class="btn btn-secondary" onclick="shaHash(true)">Hash with Salt (secure)</button>
+      </div>
+      <div id="sha-hash-result">
+        <div class="output-label">Hash</div>
+        <div class="output" id="sha-hash-out">—</div>
+        <div id="sha-salt-section" style="display:none">
+          <div class="output-label">Salt (auto-generated)</div>
+          <div class="output" id="sha-salt-out">—</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Verify -->
+    <div class="card">
+      <h3>Verify a Password</h3>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">
+        Check if a password matches a stored salted hash. Fields auto-fill after hashing above.
+      </p>
+      <div class="field">
+        <label>Password to Test</label>
+        <input type="text" id="sha-verify-input" placeholder="Type the password to check…" />
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Stored Salt</label>
+          <input type="text" id="sha-verify-salt" placeholder="Paste salt" />
+        </div>
+        <div class="field">
+          <label>Stored Hash</label>
+          <input type="text" id="sha-verify-hash" placeholder="Paste hash" />
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="shaVerify()">Verify</button>
+      </div>
+      <div class="output-label">Result</div>
+      <div class="output" id="sha-verify-out">—</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── JavaScript ──────────────────────────────────────── -->
+<script>
+// ── Tab switching ─────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function setOutput(id, text, type = '') {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'output ' + type;
+}
+function spin(id, show) {
+  document.getElementById(id).style.display = show ? 'inline' : 'none';
+}
+async function post(url, body) {
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+// ── AES ───────────────────────────────────────────────────
+async function aesGenerateKey() {
+  spin('aes-key-spin', true);
+  const d = await post('/aes/generate-key', {});
+  spin('aes-key-spin', false);
+  setOutput('aes-key-out', d.key || d.error, d.error ? 'error' : '');
+  if (d.key) {
+    document.getElementById('aes-enc-key').value = d.key;
+    document.getElementById('aes-dec-key').value = d.key;
+  }
+}
+
+async function aesEncrypt() {
+  const plaintext = document.getElementById('aes-plain').value;
+  const key = document.getElementById('aes-enc-key').value;
+  if (!plaintext) return setOutput('aes-ct-out', 'Enter a message first.', 'error');
+  const d = await post('/aes/encrypt', { plaintext, key });
+  if (d.error) {
+    setOutput('aes-ct-out', d.error, 'error');
+  } else {
+    setOutput('aes-iv-out', d.iv);
+    setOutput('aes-ct-out', d.ciphertext);
+    document.getElementById('aes-dec-iv').value = d.iv;
+    document.getElementById('aes-dec-ct').value = d.ciphertext;
+    document.getElementById('aes-dec-key').value = document.getElementById('aes-enc-key').value;
+  }
+}
+
+async function aesDecrypt() {
+  const key = document.getElementById('aes-dec-key').value;
+  const iv  = document.getElementById('aes-dec-iv').value;
+  const ct  = document.getElementById('aes-dec-ct').value;
+  if (!key || !iv || !ct) return setOutput('aes-dec-out', 'Fill in key, IV, and ciphertext.', 'error');
+  const d = await post('/aes/decrypt', { key, iv, ciphertext: ct });
+  setOutput('aes-dec-out', d.plaintext || d.error, d.error ? 'error' : 'info');
+}
+
+// ── RSA ───────────────────────────────────────────────────
+async function rsaGenKeys() {
+  spin('rsa-key-spin', true);
+  const d = await post('/rsa/generate-keys', {});
+  spin('rsa-key-spin', false);
+  document.getElementById('rsa-pub-out').value  = d.public_key  || d.error;
+  document.getElementById('rsa-priv-out').value = d.private_key || d.error;
+  if (d.public_key) {
+    document.getElementById('rsa-enc-pub').value  = d.public_key;
+    document.getElementById('rsa-dec-priv').value = d.private_key;
+  }
+}
+
+async function rsaEncrypt() {
+  const plaintext  = document.getElementById('rsa-plain').value;
+  const public_key = document.getElementById('rsa-enc-pub').value;
+  if (!plaintext || !public_key) return setOutput('rsa-ct-out', 'Enter a message and public key.', 'error');
+  const d = await post('/rsa/encrypt', { plaintext, public_key });
+  if (d.error) {
+    setOutput('rsa-ct-out', d.error, 'error');
+  } else {
+    setOutput('rsa-ct-out', d.ciphertext);
+    document.getElementById('rsa-dec-ct').value = d.ciphertext;
+  }
+}
+
+async function rsaDecrypt() {
+  const ciphertext  = document.getElementById('rsa-dec-ct').value;
+  const private_key = document.getElementById('rsa-dec-priv').value;
+  if (!ciphertext || !private_key) return setOutput('rsa-dec-out', 'Enter ciphertext and private key.', 'error');
+  const d = await post('/rsa/decrypt', { ciphertext, private_key });
+  setOutput('rsa-dec-out', d.plaintext || d.error, d.error ? 'error' : 'info');
+}
+
+// ── SHA-256 ───────────────────────────────────────────────
+async function shaHash(withSalt) {
+  const text = document.getElementById('sha-input').value;
+  if (!text) return setOutput('sha-hash-out', 'Enter some text first.', 'error');
+  const d = await post('/sha/hash', { text, use_salt: withSalt });
+  setOutput('sha-hash-out', d.hash || d.error, d.error ? 'error' : '');
+  const saltSection = document.getElementById('sha-salt-section');
+  if (withSalt && d.salt) {
+    saltSection.style.display = 'block';
+    setOutput('sha-salt-out', d.salt);
+    // Auto-fill verify fields
+    document.getElementById('sha-verify-salt').value = d.salt;
+    document.getElementById('sha-verify-hash').value = d.hash;
+    document.getElementById('sha-verify-input').value = text;
+  } else {
+    saltSection.style.display = 'none';
+  }
+}
+
+async function shaVerify() {
+  const text = document.getElementById('sha-verify-input').value;
+  const salt = document.getElementById('sha-verify-salt').value;
+  const hash = document.getElementById('sha-verify-hash').value;
+  if (!text || !salt || !hash) return setOutput('sha-verify-out', 'Fill in all three fields.', 'error');
+  const d = await post('/sha/verify', { text, salt, hash });
+  const el = document.getElementById('sha-verify-out');
+  el.className = 'output';
+  if (d.match) {
+    el.innerHTML = '<span class="badge match">✅ Match — Password is correct</span>';
+  } else {
+    el.innerHTML = '<span class="badge no-match">❌ No Match — Incorrect password</span>';
+  }
+}
+</script>
+</body>
+</html>
